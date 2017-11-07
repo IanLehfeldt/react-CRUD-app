@@ -1,143 +1,142 @@
 import React, { Component } from 'react';
 import './App.css';
 
-const url = 'http://localhost:5000/api'
+const url = 'http://localhost:5000/api';
 
 class App extends Component {
   constructor() {
-    // super is just necessary for React to work, specifically, to make
-    // the functionality of the parent `Component` class work, which we need for functionality
-    // don't worry about it too much unless you're curious: https://stackoverflow.com/a/40435298/3644991
     super();
-    // creating the default values for our application
-    // setting countries to an empty array prevents JavaScript from getting upset
-    // when we try to map it to list items in the render() function below
     this.state = {
-      title: 'Simple title for Country Application',
+      title: 'Countries are really great!',
       countries: [],
       country_name: '',
       continent_name: ''
     }
-
-    this.removeCountry = this.removeCountry.bind(this);
-    this.addCountry = this.addCountry.bind(this);
     this.updateCountryName = this.updateCountryName.bind(this);
     this.updateContinentName = this.updateContinentName.bind(this);
+    this.addCountry = this.addCountry.bind(this);
+    this.editCountry = this.editCountry.bind(this);
   }
 
-  // This gets called when the page loads
-  // This is essentially the React equivalent of jQuery's `$( document ).ready()`
-  // componentDidMount is just one of many ifecycle methods, you can learn more here: http://busypeoples.github.io/post/react-component-lifecycle/
+  //essentially on ready:
   componentDidMount() {
-    console.log('component has mounted');
-    this.getCountries(); // making our first call to the api
+    console.log('Component has mounted');
+    this.getCountries();
   }
 
-  // Retrieves all the countries
+  //fetch / http request to server / db
   getCountries() {
-    // our http request to the api
-    // a get request to 'http://localhost:5000/api/countries'
     fetch(`${url}/countries`)
-      .then(response => response.json()) // parses the JSON response into a usable countries array
+      .then(response => response.json())
       .then(countriesResponseArray => {
-        // sets the countries list in our application
-        // this triggers another render function to fire off
+        console.log('Countries array: ', countriesResponseArray);
         this.setState({
           countries: countriesResponseArray
-        })
+        });
       })
-      .catch(error => console.log(`Error Fetch : ${error}`))
-  }
-
-  removeCountry(id) {
-    // the id is passed in from the "Remove" button click thanks to
-    // onClick={event => this.removeCountry(county.id)}
-
-    // delete request adds the id as a parameter so the server knows which country to delete 
-    const request = new Request(`${url}/remove/${id}`, {
-      method: 'DELETE'
-    });
-
-    // making the request to the server to delete the country
-    fetch(request)
-      .then(response => {
-        // if the delete is successful, run getCountries again to update the list
-        this.getCountries();
-      })
-      .catch(error => console.log(`Error Remove Country Fetch : ${error}`));
-  }
-
-  addCountry(event) {
-    event.preventDefault(); // prevents the page from redirecting, jQuery requires something similar
-
-    // creates the new country object by picking up the values from the inputs
-    const country_data = {
-      country_name: this.state.country_name,
-      continent_name: this.state.continent_name
-    };
-
-    // post request requires the url, method, and body, just like jQuery or angular
-    // the extra headers and JSON.stringify pieces here are because React doesn't do that
-    // parsing for us like jQuery or angular do. There are libraries like Axios to make this
-    // part a little bit cleaner
-    const request = new Request(`${url}/new-country`, {
-      method: 'POST',
-      headers: new Headers({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify(country_data)
-    });
-
-    // making the request to the server to post the country
-    fetch(request)
-      .then(response => {
-        console.log('post was successful:', response);
-        // if the post is successful, run getCountries again to update the list
-        this.getCountries();
-      })
-      .catch(error => console.log(`Fetch Error addCountry: ${error}`));
+      .catch(error => console.log(`Error with fetch getCountries: ${error}`));
   }
 
   updateCountryName(event) {
-    this.setState({ country_name: event.target.value })
+    this.setState({
+      country_name: event.target.value
+    });
   }
 
   updateContinentName(event) {
-    this.setState({ continent_name: event.target.value })
+    this.setState({
+      continent_name: event.target.value
+    });
   }
 
-  // The render function decides what to display on the DOM
+  deleteCountry(event) {
+    console.log('Delete country: ', event);
+    let id = event.id;
+
+    const deleteRequest = new Request(`${url}/remove/${id}`, {
+      method: 'DELETE',
+      headers: new Headers({ 'Content-Type': 'application/json' })
+    });
+
+    fetch(deleteRequest)
+      .then(response => {
+        console.log(`Delete request successful: ${response}`);
+        this.getCountries();
+      }).catch(error => console.log(`Fetch failed to delete country: ${error}`)
+      );
+  }
+
+  addCountry(event) {
+    event.preventDefault();
+    if (this.state.id) {
+      const countryUpdate_data = {
+        country_name: this.state.country_name,
+        continent_name: this.state.continent_name,
+        id: this.state.id
+      }
+      console.log('Update this: ', countryUpdate_data);
+
+      const putRequest = new Request(`${url}/update-country`, {
+        method: 'PUT',
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(countryUpdate_data)
+      });
+
+      fetch(putRequest)
+        .then(response => {
+          console.log(`Put request was successful: ${response}`);
+          this.getCountries();
+        }).catch(error => console.log(`Fetch failed on update country: ${error}`)
+        )
+    } else {
+      const country_data = {
+        country_name: this.state.country_name,
+        continent_name: this.state.continent_name
+      }
+
+      const request = new Request(`${url}/new-country`, {
+        method: 'POST',
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(country_data)
+      });
+
+      fetch(request)
+        .then(response => {
+          console.log(`Post was successful: ${response}`);
+          this.getCountries();
+        }).catch(error => console.log(`Fetch failed on add country post: ${error}`)
+        )
+    }
+  }
+
+  editCountry(event) {
+    console.log('Edit country: ', event);
+    this.setState({
+      country_name: event.country_name,
+      continent_name: event.continent_name,
+      id: event.id
+    })
+  }
+
   render() {
     return (
       <div className="App">
-        {/* This title is set in the constructor and never changed */}
         <h1>{this.state.title}</h1>
-        <form className="countryForm">
-          {/* the onChange property sets up an event handler for change events */}
+
+        <form>
           <input type="text" value={this.state.country_name} onChange={this.updateCountryName} placeholder="country_name"></input>
           <input type="text" value={this.state.continent_name} onChange={this.updateContinentName} placeholder="continent_name"></input>
-          {/* onClick links us back to the function that we created earlier (like an ng-click) */}
-          <button onClick={this.addCountry}>Add Country</button>
+          <button onClick={this.addCountry}>Add/Edit Country!</button>
         </form>
 
-        {/* This list is generated by looping through the array of countries thanks to the .map
-        This should look pretty familiar to ng-repeat
-        The key is a unique identifier that React uses to target DOM elements */}
-        {/* If you're interested in React you should learn more about `.map`, along with `.reduce` and `.filter` */}
-        <ul>
+        <ul className="noBullets">
           {this.state.countries.map(country => (
-            <li key={country.id}> {country.country_name} {country.continent_name}
-              {/* A linter would want this line to be () => this.removeCountry(county.id). 
-              I am leaving the event in so its clear that this is an event handler */}
-              <button onClick={event => this.removeCountry(country.id)}>Remove</button>
-            </li>
+            <li key={country.id}><span onClick={this.editCountry.bind(this, country)}>{country.country_name} | {country.continent_name}</span> <button onClick={this.deleteCountry.bind(this, country)}>X</button></li>
           ))}
-          {/* by including the button in this repeated section, we create a new button for each 
-          country and each button will pass the corresponding country id to the function */}
         </ul>
-
       </div>
     );
   }
 }
 
-// this allows us to use <App /> in index.js
 export default App;

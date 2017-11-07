@@ -32,7 +32,7 @@ router.post('/new-country', function (req, res) {
         }
         else {
             db.query('INSERT INTO country( country_name, continent_name ) VALUES ($1,$2)',
-            [country_name, continent_name], (err, table) => {
+                [country_name, continent_name], (err, table) => {
                     done();
                     if (err) {
                         console.error('error running query', err);
@@ -69,5 +69,34 @@ router.delete('/remove/:id', function (req, res) {
     })
     console.log(id);
 });
+
+router.put('/update-country', function (req, res) {
+    const country_name = req.body.country_name;
+    const continent_name = req.body.continent_name;
+    const id = req.body.id;
+
+    pool.connect((err, db, done) => {
+        if (err) {
+            console.error('error open connection', err);
+            return res.status(400).send({ error: err });
+        }
+        else {
+            db.query('UPDATE country SET country_name=$1, continent_name=$2 WHERE ID=$3',
+                [country_name, continent_name, id], (err, table) => {
+                    done();
+                    if (err) {
+                        console.error('error running query', err);
+                        return res.status(400).send({ error: err });
+                    }
+                    else {
+                        console.log('Data Inserted: successfully!');
+                        res.status(201).send({ message: 'Data Updated!' })
+                    }
+                })
+        }
+    });
+
+    console.log(req.body);
+})
 
 module.exports = router;
