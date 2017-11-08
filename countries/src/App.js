@@ -6,12 +6,14 @@ const url = 'http://localhost:5000/api';
 class App extends Component {
   constructor() {
     super();
+    //original state of react app
     this.state = {
       title: 'Countries are really great!',
       countries: [],
       country_name: '',
       continent_name: ''
     }
+    //binds state data to this component
     this.updateCountryName = this.updateCountryName.bind(this);
     this.updateContinentName = this.updateContinentName.bind(this);
     this.addCountry = this.addCountry.bind(this);
@@ -37,6 +39,7 @@ class App extends Component {
       .catch(error => console.log(`Error with fetch getCountries: ${error}`));
   }
 
+  // allows states to be set for adding a new country
   updateCountryName(event) {
     this.setState({
       country_name: event.target.value
@@ -49,6 +52,7 @@ class App extends Component {
     });
   }
 
+  // delete request
   deleteCountry(event) {
     console.log('Delete country: ', event);
     let id = event.id;
@@ -62,12 +66,20 @@ class App extends Component {
       .then(response => {
         console.log(`Delete request successful: ${response}`);
         this.getCountries();
+        this.setState({
+          //empties input states
+          country_name: '',
+          continent_name: '',
+          id: ''
+        })
       }).catch(error => console.log(`Fetch failed to delete country: ${error}`)
       );
   }
 
+  // adds a new country if current state doesnt have an id, if current state does have an id, adds a new country
   addCountry(event) {
     event.preventDefault();
+    // if checks if current state has an id
     if (this.state.id) {
       const countryUpdate_data = {
         country_name: this.state.country_name,
@@ -86,10 +98,17 @@ class App extends Component {
         .then(response => {
           console.log(`Put request was successful: ${response}`);
           this.getCountries();
+          this.setState({
+            //empties input states
+            country_name: '',
+            continent_name: '',
+            id: ''
+          })
         }).catch(error => console.log(`Fetch failed on update country: ${error}`)
         )
     } else {
       const country_data = {
+        //new country data
         country_name: this.state.country_name,
         continent_name: this.state.continent_name
       }
@@ -104,10 +123,17 @@ class App extends Component {
         .then(response => {
           console.log(`Post was successful: ${response}`);
           this.getCountries();
+          this.setState({
+            //empties input states
+            country_name: '',
+            continent_name: '',
+            id: ''
+          })
         }).catch(error => console.log(`Fetch failed on add country post: ${error}`)
         )
     }
   }
+
 
   editCountry(event) {
     console.log('Edit country: ', event);
